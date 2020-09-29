@@ -41,8 +41,6 @@ class BiFscore(nn.Module):
         f1 = f1.clamp(min=self.epsilon, max=1-self.epsilon)
         return 1 - f1.mean()
     
-    
-    
 class Specificity(nn.Module):
     def __init__(self):
         super().__init__()
@@ -60,6 +58,7 @@ class Specificity(nn.Module):
         fn = (gt * (1 - pred)).sum().to(torch.float32)
 
         return (tn + self.eps)/(fp + tn + self.eps)
+    
 class Accuracy(nn.Module):
     def __init__(self):
         super().__init__()
@@ -73,3 +72,67 @@ class Accuracy(nn.Module):
         tp = tp.type(torch.DoubleTensor)
         score = tp/y_gt.view(-1).shape[0]
         return score
+    
+class L1Loss(nn.Module):
+    def __init__(self, max_value = 1):
+        super().__init__()
+        self.max_value = max_value
+    @property
+    def __name__(self):
+        return 'l1loss'
+    def forward(self, y_pred, y_gt):
+        y_pred =nn.ReLU()(y_pred)
+        y_pred = torch.squeeze(y_pred)
+        return nn.L1Loss()(y_pred, y_gt)
+    
+class MSELoss(nn.Module):
+    def __init__(self, max_value = 1):
+        super().__init__()
+        self.max_value = max_value
+    @property
+    def __name__(self):
+        return 'mseloss'
+    def forward(self, y_pred, y_gt):
+        y_pred = nn.ReLU()(y_pred)
+        y_pred = torch.squeeze(y_pred)
+        return nn.MSELoss()(y_pred, y_gt)
+    
+class quadratic_kappa(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.num = 0
+        self.den = 0
+    @property
+    def __name__(self):
+        return 'quadratic_kappa'
+    def forward(self, y_pred, y_gt):
+        y_pred = torch.squeeze(y_pred)
+        
+        N = len(y_gt)
+        weight = torch.zeros((N, N))
+        confusion_matrix = torch.zeros((N, N))
+        for i in range(N):
+            for j in range(N):
+                weight[i][j] = ((i-j)**2)/((N-1)**2)
+        
+        for i, j in zip(y_gt, y_pred):
+            confusion_matrix[i][j] += 1
+        
+        gt_hist = torch.zeros((N))
+        for i in y_gt:
+            gt_hist[i] += 1
+        
+        pred_hist = torch.zeros((N))
+        for i in y_pred:
+            pred_hist[i] += 1
+        
+        
+        E = torch.ger(gt_hist, pred_hist)
+        E = E/torch.sum(E)
+        
+        confusion_matrix = confusion_matrix/torch.sum(confusion_matrix)
+        
+        self.num = torch.sum(weight * confusion_matrix)
+        self.den = torch.sum(weight * E)
+
+        return (1-(self.num/self.den))
