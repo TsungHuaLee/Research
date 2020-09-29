@@ -80,21 +80,21 @@ def normalizeStaining(img, saveFile=None, Io=240, alpha=1, beta=0.15, only = Tru
     Inorm = np.multiply(Io, np.exp(-HERef.dot(C2)))
     Inorm[Inorm>255] = 254
     Inorm = np.reshape(Inorm.T, (h, w, 3)).astype(np.uint8)  
-    
-    # unmix hematoxylin and eosin
-    H = np.multiply(Io, np.exp(np.expand_dims(-HERef[:,0], axis=1).dot(np.expand_dims(C2[0,:], axis=0))))
-    H[H>255] = 254
-    H = np.reshape(H.T, (h, w, 3)).astype(np.uint8)
+    if not only:
+        # unmix hematoxylin and eosin
+        H = np.multiply(Io, np.exp(np.expand_dims(-HERef[:,0], axis=1).dot(np.expand_dims(C2[0,:], axis=0))))
+        H[H>255] = 254
+        H = np.reshape(H.T, (h, w, 3)).astype(np.uint8)
 
-    E = np.multiply(Io, np.exp(np.expand_dims(-HERef[:,1], axis=1).dot(np.expand_dims(C2[1,:], axis=0))))
-    E[E>255] = 254
-    E = np.reshape(E.T, (h, w, 3)).astype(np.uint8)
+        E = np.multiply(Io, np.exp(np.expand_dims(-HERef[:,1], axis=1).dot(np.expand_dims(C2[1,:], axis=0))))
+        E[E>255] = 254
+        E = np.reshape(E.T, (h, w, 3)).astype(np.uint8)
     
     if saveFile is not None:
-        Image.fromarray(Inorm).save(saveFile+'.png')
+        Image.fromarray(Inorm).save(saveFile+'.jpg', "JPEG")
         if not only:
-            Image.fromarray(H).save(saveFile+'_H.png')
-            Image.fromarray(E).save(saveFile+'_E.png')
+            Image.fromarray(H).save(saveFile+'_H.jpg', "JPEG")
+            Image.fromarray(E).save(saveFile+'_E.jpg', "JPEG")
 
     return Inorm, H, E
 
