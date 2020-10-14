@@ -136,3 +136,6 @@ class quadratic_kappa(nn.Module):
         self.den = torch.sum(weight * E)
 
         return (1-(self.num/self.den))
+    
+    
+
