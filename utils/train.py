@@ -1,6 +1,7 @@
 import sys
 import torch
 from tqdm import tqdm as tqdm
+import numpy as np
 from .meter import AverageValueMeter
 
 
@@ -111,3 +112,30 @@ class ValidEpoch(Epoch):
             prediction = self.model.forward(x)
             loss = self.loss(prediction, y)
         return loss, prediction
+
+
+def warmup():
+    import math
+    num_epochs = 100
+    warm_up_epochs = 10
+    lr_milestones = [20,40]
+    # MultiStepLR without warm up
+    multistep_lr = lambda epoch: 0.1**len([m for m in lr_milestones if m <= epoch])
+    # warm_up_with_multistep_lr
+    warm_up_with_multistep_lr = lambda epoch: (epoch+1) / warm_up_epochs if epoch < warm_up_epochs else 0.1**len([m for m in lr_milestones if m <= epoch])
+    # warm_up_with_step_lr
+    gamma = 0.9; stepsize = 1
+    warm_up_with_step_lr = lambda epoch: (epoch+1) / warm_up_epochs if epoch < warm_up_epochs \
+        else gamma**( ((epoch - warm_up_epochs) /(num_epochs - warm_up_epochs))//stepsize*stepsize)
+    # warm_up_with_cosine_lr
+    warm_up_with_cosine_lr = lambda epoch: (epoch+1) / warm_up_epochs if epoch < warm_up_epochs \
+        else 0.5 * ( math.cos((epoch - warm_up_epochs) /(num_epochs - warm_up_epochs) * math.pi) + 1)
+    scheduler = torch.optim.lr_scheduler.LambdaLR( optimizer, lr_lambda=warm_up_with_cosine_lr)
+
+# +
+# test
+# a_ = []
+# for i in range(30):
+#     lr = warm_up_with_cosine_lr(i)*init_lr
+#     a_.append(lr)
+# plt.plot(a_)

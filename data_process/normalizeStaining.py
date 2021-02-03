@@ -95,8 +95,10 @@ def normalizeStaining(img, saveFile=None, Io=240, alpha=1, beta=0.15, only = Tru
         if not only:
             Image.fromarray(H).save(saveFile+'_H.jpg', "JPEG")
             Image.fromarray(E).save(saveFile+'_E.jpg', "JPEG")
-
-    return Inorm, H, E
+    if only:
+        return Inorm
+    else:
+        return Inorm, H, E
 
 
 if __name__=='__main__':
