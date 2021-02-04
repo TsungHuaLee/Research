@@ -2,6 +2,7 @@
 import torch.nn as nn
 import torch 
 import torch.nn.functional as F
+from . import global_objective
 
 class BCEWithLogits(nn.Module):
     def __init__(self):
@@ -98,3 +99,10 @@ class quadratic_kappa(nn.Module):
         self.den = torch.sum(weight * E)
 
         return (1-(self.num/self.den))
+    
+
+class AUCPRHingeLoss(global_objective.AUCPRHingeLoss):
+    pass
+
+class AUROCLoss(global_objective.AUROCLoss):
+    pass
